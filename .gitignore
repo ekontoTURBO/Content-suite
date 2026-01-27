@@ -1,0 +1,19 @@
+# Credentials and Settings
+backend/settings.json
+backend/cookies.txt
+*.env
+
+# Python
+backend/venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# JS / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# IDEs
+.vscode/
+.idea/

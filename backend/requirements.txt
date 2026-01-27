@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+youtube-transcript-api
+yt-dlp
+openai
+google-genai
+python-dotenv
+requests
