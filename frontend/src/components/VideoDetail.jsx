@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, FileText, Tag, Loader, Copy } from 'lucide-react';
-import { fetchTranscript, generateTags } from '../api';
+import { fetchTranscript, generateTags, fetchSettings } from '../api';
 
-const VideoDetail = ({ video, isOpen, onClose, universalTags }) => {
+const VideoDetail = ({ video, isOpen, onClose, universalTags, cachedTranscripts, cachedTags, onTranscriptFetched, onTagsGenerated }) => {
     const [activeTab, setActiveTab] = useState('details'); // details, transcript, tags
     const [transcript, setTranscript] = useState(null);
     const [transcriptText, setTranscriptText] = useState('');
     const [tags, setTags] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [provider, setProvider] = useState('openai'); // 'openai' | 'gemini'
 
-    // Fetch transcript on open if not fetched
-    // Actually, we should probably fetch only on demand or if auto-process ran.
-    // For now, let's allow manual fetch.
+    // Reset state when a different video is selected, load cached data if available
+    useEffect(() => {
+        setActiveTab('details');
+
+        const cached = video?.id && cachedTranscripts?.[video.id];
+        if (cached) {
+            setTranscript(cached.data);
+            setTranscriptText(cached.text);
+        } else {
+            setTranscript(null);
+            setTranscriptText('');
+        }
+
+        const cachedVideoTags = video?.id && cachedTags?.[video.id];
+        setTags(cachedVideoTags || []);
+    }, [video?.id, cachedTranscripts, cachedTags]);
 
     const handleFetchTranscript = async () => {
         setLoading(true);
@@ -20,6 +32,7 @@ const VideoDetail = ({ video, isOpen, onClose, universalTags }) => {
             const data = await fetchTranscript(video.id);
             setTranscript(data.transcript_data);
             setTranscriptText(data.transcript_text);
+            onTranscriptFetched?.(video.id, data.transcript_text, data.transcript_data);
             setActiveTab('transcript');
         } catch (error) {
             alert("Failed to fetch transcript: " + (error.response?.data?.detail || error.message));
@@ -34,27 +47,15 @@ const VideoDetail = ({ video, isOpen, onClose, universalTags }) => {
             return;
         }
         setLoading(true);
-        // Get stored API keys to decide visible options? 
-        // Ideally user selects provider here.
         try {
-            const stored = JSON.parse(await fetchSettings());
-            // Wait, we can't await async in synchronous flow easily without state or passing props.
-            // We'll trust the user selected provider has a key or backend will error.
-        } catch (e) { }
-
-        try {
-            // Need API keys... API function handles sending keys? 
-            // api.js `generateTags` expects apiKey.
-            // We need to fetch settings or assume backend handles it?
-            // My backend implementation expects `api_key` in request body.
-            // So frontend must read it.
-            // I'll assume parent passes settings or we fetch them here.
-            // Let's simplified: fetch settings right before calling.
-            const settings = await import('../api').then(m => m.fetchSettings());
-            const apiKey = provider === 'openai' ? settings.openai_key : settings.gemini_key;
+            const settings = await fetchSettings();
+            const provider = settings.provider || 'gemini';
+            const keyMap = { openai: settings.openai_key, gemini: settings.gemini_key, openrouter: settings.openrouter_key };
+            const apiKey = keyMap[provider] || '';
 
             const data = await generateTags(transcriptText, provider, apiKey, universalTags);
             setTags(data.tags);
+            onTagsGenerated?.(video.id, data.tags);
             setActiveTab('tags');
         } catch (error) {
             alert("Failed to generate tags: " + (error.response?.data?.detail || error.message));
@@ -108,20 +109,6 @@ const VideoDetail = ({ video, isOpen, onClose, universalTags }) => {
                             {tags.length > 0 ? 'View Tags' : 'Generate Tags'}
                         </button>
 
-                        {/* Provider Selection */}
-                        {transcriptText && !tags.length && (
-                            <div style={{ marginTop: 'auto', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                                <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '5px' }}>AI Provider</label>
-                                <select
-                                    value={provider}
-                                    onChange={(e) => setProvider(e.target.value)}
-                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', background: '#222', color: 'white', border: '1px solid #444' }}
-                                >
-                                    <option value="openai">OpenAI</option>
-                                    <option value="gemini">Gemini</option>
-                                </select>
-                            </div>
-                        )}
                     </div>
 
                     {/* Main Area */}

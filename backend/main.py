@@ -35,6 +35,8 @@ class TagGenerationRequest(BaseModel):
 class Settings(BaseModel):
     openai_key: Optional[str] = ""
     gemini_key: Optional[str] = ""
+    openrouter_key: Optional[str] = ""
+    provider: Optional[str] = "gemini"  # "openai" | "gemini" | "openrouter"
 
 SETTINGS_FILE = "settings.json"
 
@@ -43,7 +45,7 @@ def load_settings():
     if os.path.exists(SETTINGS_FILE):
         with open(SETTINGS_FILE, "r") as f:
             return json.load(f)
-    return {"openai_key": "", "gemini_key": ""}
+    return {"openai_key": "", "gemini_key": "", "openrouter_key": "", "provider": "gemini"}
 
 def save_settings(settings: dict):
     with open(SETTINGS_FILE, "w") as f:
@@ -97,6 +99,7 @@ def fetch_videos(request: VideoRequest):
                     'title': entry.get('title'),
                     'duration': entry.get('duration'),
                     'uploader': entry.get('uploader'),
+                    'view_count': entry.get('view_count'),
                     'thumbnail': entry.get('thumbnail', None) or f"https://img.youtube.com/vi/{entry.get('id')}/mqdefault.jpg"
                 }
 
@@ -109,7 +112,7 @@ def fetch_videos(request: VideoRequest):
                     if v:
                         videos.append(v)
                         cnt += 1
-                        if cnt >= 200: # Limit to 200 videos to prevent hanging
+                        if cnt >= 500: # Limit to 500 videos to prevent hanging
                             break
             else:
                 # Single Video
@@ -276,19 +279,37 @@ def generate_tags(request: TagGenerationRequest):
         elif request.provider == "gemini":
             if not request.api_key:
                 raise HTTPException(status_code=400, detail="Gemini API Key provided is empty")
-                
+
             client = genai.Client(api_key=request.api_key)
-            # Using 3.0 Flash as requested
             response = client.models.generate_content(
-                model='gemini-3.0-flash', 
+                model='gemini-3-flash-preview',
                 contents=final_prompt
             )
-            
+
             tags = [tag.strip() for tag in response.text.split(',')]
             return {"tags": tags, "provider": "gemini"}
 
+        elif request.provider == "openrouter":
+            if not request.api_key:
+                raise HTTPException(status_code=400, detail="OpenRouter API Key provided is empty")
+
+            client = openai.OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=request.api_key,
+            )
+            response = client.chat.completions.create(
+                model="google/gemini-2.5-flash-preview",
+                messages=[
+                    {"role": "system", "content": "You are a specialized YouTube tag generator. Output ONLY csv tags."},
+                    {"role": "user", "content": final_prompt}
+                ]
+            )
+            content = response.choices[0].message.content
+            tags = [tag.strip() for tag in content.split(',')]
+            return {"tags": tags, "provider": "openrouter"}
+
         else:
-            raise HTTPException(status_code=400, detail="Invalid provider. Choose 'openai' or 'gemini'.")
+            raise HTTPException(status_code=400, detail="Invalid provider. Choose 'openai', 'gemini', or 'openrouter'.")
 
     except Exception as e:
         print(f"Error generating tags: {e}")

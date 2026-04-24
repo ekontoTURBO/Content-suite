@@ -1,7 +1,7 @@
 import React from 'react';
-import { Play, Clock, CheckCircle, Loader } from 'lucide-react';
+import { Play, Clock, CheckCircle, Loader, Tag, Eye } from 'lucide-react';
 
-const VideoList = ({ videos, selectedRange, onVideoClick, processingIds, completedIds }) => {
+const VideoList = ({ videos, selectedRange, onVideoClick, processingIds, completedIds, tagProcessingIds, tagCompletedIds }) => {
     if (!videos.length) {
         return (
             <div className="flex-center" style={{ height: '300px', flexDirection: 'column', color: 'var(--text-secondary)' }}>
@@ -23,6 +23,8 @@ const VideoList = ({ videos, selectedRange, onVideoClick, processingIds, complet
                 const inRange = isInRange(index);
                 const isProcessing = processingIds.includes(video.id);
                 const isCompleted = completedIds.includes(video.id);
+                const isTagProcessing = tagProcessingIds?.includes(video.id);
+                const isTagCompleted = tagCompletedIds?.includes(video.id);
 
                 return (
                     <div
@@ -58,24 +60,37 @@ const VideoList = ({ videos, selectedRange, onVideoClick, processingIds, complet
                                 {video.duration_string || '00:00'}
                             </div>
 
-                            {/* Status Overlay */}
-                            {(isProcessing || isCompleted) && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '10px',
-                                    right: '10px',
-                                    background: isCompleted ? 'var(--success)' : 'var(--accent-color)',
-                                    borderRadius: '50%',
-                                    width: '30px',
-                                    height: '30px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 0 10px rgba(0,0,0,0.5)'
-                                }}>
-                                    {isProcessing ? <Loader size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                                </div>
-                            )}
+                            {/* Status Overlays */}
+                            <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '6px' }}>
+                                {(isProcessing || isCompleted) && (
+                                    <div style={{
+                                        background: isCompleted ? 'var(--success)' : 'var(--accent-color)',
+                                        borderRadius: '50%',
+                                        width: '30px',
+                                        height: '30px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+                                    }} title="Transcript">
+                                        {isProcessing ? <Loader size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                                    </div>
+                                )}
+                                {(isTagProcessing || isTagCompleted) && (
+                                    <div style={{
+                                        background: isTagCompleted ? '#f59e0b' : 'var(--accent-color)',
+                                        borderRadius: '50%',
+                                        width: '30px',
+                                        height: '30px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+                                    }} title="Tags">
+                                        {isTagProcessing ? <Loader size={16} className="animate-spin" /> : <Tag size={16} />}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Content */}
@@ -88,7 +103,15 @@ const VideoList = ({ videos, selectedRange, onVideoClick, processingIds, complet
                                 justifyContent: 'space-between'
                             }}>
                                 <span>#{index + 1}</span>
-                                <span>{video.uploader}</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {video.view_count != null && (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                            <Eye size={12} />
+                                            {video.view_count >= 1000000 ? (video.view_count / 1000000).toFixed(1) + 'M' : video.view_count >= 1000 ? (video.view_count / 1000).toFixed(1) + 'K' : video.view_count}
+                                        </span>
+                                    )}
+                                    <span>{video.uploader}</span>
+                                </span>
                             </div>
                             <h3 style={{
                                 fontSize: '1rem',

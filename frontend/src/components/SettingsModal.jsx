@@ -3,7 +3,7 @@ import { X, Save } from 'lucide-react';
 import { fetchSettings, saveSettings } from '../api';
 
 const SettingsModal = ({ isOpen, onClose, onSave }) => {
-    const [keys, setKeys] = useState({ openai_key: '', gemini_key: '' });
+    const [keys, setKeys] = useState({ openai_key: '', gemini_key: '', openrouter_key: '', provider: 'gemini' });
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -56,6 +56,20 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                     <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#a3a3a3' }}>AI Provider</label>
+                        <select
+                            name="provider"
+                            value={keys.provider}
+                            onChange={handleChange}
+                            style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid var(--glass-border)', fontFamily: 'inherit', fontSize: '0.95rem' }}
+                        >
+                            <option value="openai">OpenAI (GPT-3.5)</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="openrouter">OpenRouter</option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#a3a3a3' }}>OpenAI API Key</label>
                         <input
                             type="password"
@@ -75,6 +89,18 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
                             value={keys.gemini_key}
                             onChange={handleChange}
                             placeholder="AIza..."
+                            className="input-field"
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#a3a3a3' }}>OpenRouter API Key</label>
+                        <input
+                            type="password"
+                            name="openrouter_key"
+                            value={keys.openrouter_key}
+                            onChange={handleChange}
+                            placeholder="sk-or-..."
                             className="input-field"
                         />
                     </div>

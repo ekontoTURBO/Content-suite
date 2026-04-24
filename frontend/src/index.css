@@ -58,7 +58,7 @@ body {
 .flex-center { 
   display: flex;
   align-items: center;
-  justify_content: center;
+  justify-content: center;
 }
 
 .glass-panel {
@@ -119,6 +119,19 @@ body {
   outline: none;
   border-color: var(--accent-color);
 }
+
+/* Layout Utilities */
+.fixed { position: fixed; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.z-50 { z-index: 50; }
+.min-h-screen { min-height: 100vh; }
+
+/* Animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin { animation: spin 1s linear infinite; }
 
 /* Range Slider Styling */
 input[type=range] {
