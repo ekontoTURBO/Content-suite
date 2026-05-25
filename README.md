@@ -1,77 +1,110 @@
-# YouTube Transcript & Tag Generator
+<div align="center">
 
-A premium web application to fetch metadata, transcripts, and generate AI-powered tags for YouTube videos, playlists, and channels.
+# Content Suite
 
-## Features
-- **Fetch Metadata**: Robust support for Videos, Playlists, and Channels using `yt-dlp`.
-- **Transcripts**: Direct integration with `youtube-transcript-api` to fetch manual or auto-generated captions.
-- **AI Tag Generation**: Generate SEO-optimized tags using **OpenAI (GPT-3.5)** or **Google Gemini**.
-- **Batch Processing**: Select a range of videos (e.g., 1-50) to fetch transcripts in bulk.
-- **Premium UI**: Modern, dark-mode React interface with glassmorphism design.
+**YouTube transcript & SEO tag generator** for videos, playlists, and channels.
+Fetch metadata, pull captions in bulk, generate AI-optimized tags in one place.
 
-## Installation
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Node 16+](https://img.shields.io/badge/node-16+-339933.svg)](https://nodejs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![React + Vite](https://img.shields.io/badge/React-Vite-61DAFB.svg)](https://vitejs.dev/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--3.5-412991.svg)](https://platform.openai.com/)
+[![Gemini](https://img.shields.io/badge/Gemini-API-4285F4.svg)](https://aistudio.google.com/)
+
+</div>
+
+---
+
+## What it does
+
+| Capability | How |
+|---|---|
+| **Fetch metadata** | Videos, playlists, and channels via `yt-dlp` |
+| **Pull transcripts** | Manual or auto-generated captions via `youtube-transcript-api` |
+| **Batch transcripts** | Process ranges (e.g. videos 1–50) in bulk |
+| **AI tag generation** | SEO-optimized tags via OpenAI GPT-3.5 or Google Gemini |
+| **Premium UI** | Dark-mode React interface with glassmorphism |
+
+---
+
+## Stack
+
+```
+┌────────────────────┐         ┌────────────────────┐
+│  React + Vite      │ ◄─────► │  FastAPI (Python)  │
+│  Tailwind / glass  │  REST   │  yt-dlp + transcr. │
+│  :5173             │         │  OpenAI / Gemini   │
+└────────────────────┘         └────────────────────┘
+```
+
+- **Frontend** — React + Vite + Tailwind, glassmorphism dark mode
+- **Backend** — FastAPI + `yt-dlp` + `youtube-transcript-api`
+- **AI** — OpenAI GPT-3.5 or Google Gemini for tag synthesis
+- **Settings** — keys stored locally in `backend/settings.json`
+
+---
+
+## Quick start
 
 ### Prerequisites
-- **Python 3.8+**
-- **Node.js 16+**
 
-### 1. Backend Setup
-Open a terminal in the `backend` folder:
+- Python 3.8+
+- Node.js 16+
+
+### One-shot launcher (Windows)
+
+```powershell
+.\start_app.ps1
+```
+
+Spawns two terminals: FastAPI backend on `:8000`, Vite frontend on `:5173`.
+
+### Manual setup
+
+**Backend:**
+
 ```bash
 cd backend
 python -m venv venv
-# Windows
-.\venv\Scripts\activate
-# Install dependencies
+.\venv\Scripts\activate     # Windows
+# source venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
+uvicorn main:app --reload
 ```
 
-### 2. Frontend Setup
-Open a terminal in the `frontend` folder:
+**Frontend:**
+
 ```bash
 cd frontend
 npm install
+npm run dev
 ```
 
-## How to Run
+---
 
-The easiest way to start the application is using the included PowerShell script:
+## Usage
 
-1.  Open the project root folder in PowerShell.
-2.  Run the restart script:
-    ```powershell
-    .\start_app.ps1
-    ```
-    *(This will launch two terminal windows: one for the FastAPI backend acting on port 8000, and one for the Vite frontend on port 5173).*
+1. **Configure API keys** — Settings button (top right) → paste OpenAI or Gemini key → Save. Keys stored in `backend/settings.json` (local only).
+2. **Fetch videos** — paste a YouTube URL (video / playlist / channel) → **Fetch**. The scrollable list populates with metadata.
+3. **Get transcripts**
+   - Single: click **Details** → **Fetch Transcript**
+   - Bulk: enter a range (e.g. 0–10) above the list → **Fetch Transcripts**
+4. **Generate tags** — open a video's details (transcript required) → **Generate Tags** → pick provider → copy to clipboard.
 
-Alternatively, you can run them manually:
-- **Backend**: `uvicorn main:app --reload` (inside `backend` folder with venv active)
-- **Frontend**: `npm run dev` (inside `frontend` folder)
-
-## Usage Guide
-
-1.  **Configure API Keys**:
-    - Click the **Settings** button (top right).
-    - Enter your **OpenAI API Key** or **Gemini API Key**.
-    - Click Save. Keys are stored locally in `backend/settings.json`.
-
-2.  **Fetch Videos**:
-    - Paste a YouTube URL (Video, Playlist, or Channel) into the search bar.
-    - Click **Fetch**.
-    - The scrollable list will populate with video metadata.
-
-3.  **Get Transcripts**:
-    - **Single Video**: Click "Details" on any video card, then click "Fetch Transcript".
-    - **Bulk (Range)**:
-        - Enter a start and end index (e.g., Range: 0 to 10) above the list.
-        - Click the **Fetch Transcripts** button to process them automatically.
-
-4.  **Generate Tags**:
-    - Open a video's details (must have transcript fetched).
-    - Click **Generate Tags**.
-    - Select your provider (OpenAI or Gemini) if prompted.
-    - Copy the generated tags to your clipboard.
+---
 
 ## Troubleshooting
-- **Transcript Not Found**: Some videos do not have captions/transcripts available. The app attempts to find any available language/auto-generated caption, but if none exist, it will fail for that specific video.
-- **API Errors**: Ensure your API keys are valid and have credits/quota.
+
+| Symptom | Fix |
+|---|---|
+| **Transcript Not Found** | Video has no captions. The app tries every available language + auto-gen; if none exist, it fails for that video only. |
+| **API errors** | Verify the key is valid and the account has credits / quota. |
+| **`yt-dlp` outdated** | `pip install -U yt-dlp` — YouTube changes frequently. |
+
+---
+
+## License
+
+MIT. Use, fork, ship.
